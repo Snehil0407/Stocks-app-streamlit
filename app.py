@@ -8,7 +8,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import datetime
 
-# Define chart styling function first
 def style_chart(fig):
     fig.update_layout(
         plot_bgcolor='white',
@@ -28,7 +27,6 @@ def style_chart(fig):
     )
     return fig
 
-# Page configuration
 st.set_page_config(
     page_title="Global Companies Rankings",
     page_icon="📈",
@@ -36,7 +34,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Enhanced CSS with better color contrast and visibility
 st.markdown("""
     <style>
     .main-header {
@@ -137,7 +134,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Header
 st.markdown("""
     <div class="main-header">
         <h1>🌍 Global Companies Rankings Dashboard</h1>
@@ -145,18 +141,17 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Load the data
 @st.cache_data
 def load_data():
     try:
-        # First try to load from the same directory
+        
         df = pd.read_csv("final.csv")
     except FileNotFoundError:
         try:
-            # Try loading from a data subdirectory
+            
             df = pd.read_csv("data/final.csv")
         except FileNotFoundError:
-            # If file is not found, create sample data
+            
             sample_data = {
                 'Name': ['Apple', 'Microsoft', 'Google', 'Amazon', 'Meta'],
                 'Market Cap': ['3610', '2971', '2116', '2271', '1706'],
@@ -173,16 +168,14 @@ def load_data():
             """)
     
     try:
-        # Clean Market Cap - handle potential string formatting
         df['Market Cap'] = df['Market Cap'].astype(str).str.replace(' ', '').astype(float)
-        # Clean Price - handle potential string formatting
+        
         df['Price'] = df['Price'].astype(float)
         return df
     except Exception as e:
         st.error(f"Error processing data: {e}")
         return pd.DataFrame(columns=['Name', 'Market Cap', 'Price'])
 
-# Add error handling for data loading
 try:
     data = load_data().copy()
     if data.empty:
@@ -192,16 +185,13 @@ except Exception as e:
     st.error(f"Failed to process data: {e}")
     st.stop()
 
-# Sidebar filters
 st.sidebar.markdown("## 🔍 Filter Options")
 st.sidebar.markdown("---")
 
-# Advanced filtering
 with st.sidebar:
-    # Number of companies
+   
     number_of_companies = st.slider("Number of Companies to Display", 5, len(data), 25)
     
-    # Market Cap Range
     st.markdown("### 💰 Market Cap Filter (Billion USD)")
     market_cap_range = st.slider(
         "Select Range",
@@ -210,7 +200,6 @@ with st.sidebar:
         (float(data['Market Cap'].min()), float(data['Market Cap'].max()))
     )
     
-    # Price Range
     st.markdown("### 💵 Stock Price Filter (USD)")
     price_range = st.slider(
         "Select Range",
@@ -219,7 +208,6 @@ with st.sidebar:
         (float(data['Price'].min()), float(data['Price'].max()))
     )
     
-    # Company Search
     search_term = st.text_input("🔍 Search Company")
     
     st.markdown("### 📊 Sort By")
@@ -230,7 +218,6 @@ with st.sidebar:
          "Company Name (A-Z)"]
     )
 
-# Apply filters
 filtered_data = data[
     (data['Market Cap'].between(market_cap_range[0], market_cap_range[1])) &
     (data['Price'].between(price_range[0], price_range[1]))
@@ -239,7 +226,6 @@ filtered_data = data[
 if search_term:
     filtered_data = filtered_data[filtered_data['Name'].str.contains(search_term, case=False)]
 
-# Apply sorting
 sort_dict = {
     "Market Cap (High to Low)": ('Market Cap', False),
     "Market Cap (Low to High)": ('Market Cap', True),
@@ -251,7 +237,6 @@ sort_col, sort_asc = sort_dict[sort_by]
 filtered_data = filtered_data.sort_values(sort_col, ascending=sort_asc)
 filtered_data = filtered_data.head(number_of_companies)
 
-# Key Metrics Display
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown("""
@@ -284,14 +269,13 @@ with col4:
 
 st.markdown("---")
 
-# Main content tabs
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Rankings", "📈 Market Analysis", "💰 Price Analysis", "🔍 Insights"])
 
 with tab1:
-    # Company Rankings Table
+   
     st.markdown("### 🏢 Company Rankings")
     
-    # Column configuration
+   
     image_column = st.column_config.ImageColumn(label="", width="medium")
     name_column = st.column_config.TextColumn(label="Company Name", width="large")
     market_cap_column = st.column_config.NumberColumn(
@@ -317,7 +301,7 @@ with tab1:
     )
 
 with tab2:
-    # Header for Market Analysis
+   
     st.markdown("""
         <div style='background: linear-gradient(135deg, #1E3D59, #17428D); 
                     padding: 25px; 
@@ -330,7 +314,6 @@ with tab2:
         </div>
     """, unsafe_allow_html=True)
 
-    # Market Overview Cards
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown("""
@@ -400,11 +383,10 @@ with tab2:
 
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # Main visualizations
     col1, col2 = st.columns(2)
     
     with col1:
-        # Enhanced Market Cap Distribution
+        
         fig_market = go.Figure()
         fig_market.add_trace(go.Bar(
             x=filtered_data['Name'],
@@ -455,7 +437,6 @@ with tab2:
         
         st.plotly_chart(fig_market, use_container_width=True)
         
-        # Analysis card with improved contrast
         st.markdown("""
             <div style='background: linear-gradient(135deg, #F8F9FA, #FFFFFF); 
                        padding: 20px; 
@@ -472,7 +453,7 @@ with tab2:
         """, unsafe_allow_html=True)
     
     with col2:
-        # Enhanced Pie Chart
+       
         fig_pie = go.Figure(data=[go.Pie(
             labels=filtered_data.head(10)['Name'],
             values=filtered_data.head(10)['Market Cap'],
@@ -512,7 +493,6 @@ with tab2:
         
         st.plotly_chart(fig_pie, use_container_width=True)
         
-        # Analysis card with improved contrast
         st.markdown("""
             <div style='background: linear-gradient(135deg, #F8F9FA, #FFFFFF); 
                        padding: 20px; 
@@ -528,7 +508,6 @@ with tab2:
             </div>
         """, unsafe_allow_html=True)
 
-    # Market Trends Summary with improved contrast
     st.markdown("""
         <div style='background: linear-gradient(135deg, #1E3D59, #17428D);
                     padding: 25px;
@@ -548,7 +527,7 @@ with tab3:
     col1, col2 = st.columns(2)
     
     with col1:
-        # Price vs Market Cap Scatter
+        
         fig_scatter = px.scatter(
             filtered_data,
             x='Market Cap',
@@ -562,7 +541,7 @@ with tab3:
         st.plotly_chart(fig_scatter, use_container_width=True)
     
     with col2:
-        # Price Distribution
+     
         fig_box = px.box(
             filtered_data,
             y='Price',
@@ -572,7 +551,7 @@ with tab3:
         st.plotly_chart(fig_box, use_container_width=True)
 
 with tab4:
-    # Statistical Insights
+  
     st.markdown("""
         <div style='background-color: #1E3D59; padding: 20px; border-radius: 10px; margin-bottom: 20px;'>
             <h2 style='color: white; text-align: center; margin-bottom: 0;'>📊 Statistical Analysis</h2>
@@ -581,7 +560,6 @@ with tab4:
     
     col1, col2 = st.columns(2)
     
-    # Helper function for stats card
     def create_stats_card(title, stats_data, prefix="$"):
         stats_html = f"""
         <div style='background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);'>
@@ -628,7 +606,6 @@ with tab4:
         stats_market = filtered_data['Market Cap'].describe()
         st.markdown(create_stats_card("Market Cap Statistics (Billion USD)", stats_market), unsafe_allow_html=True)
         
-        # Add a summary card
         st.markdown("""
             <div style='background: #F0F4F8; padding: 15px; border-radius: 10px; margin-top: 20px;'>
                 <h4 style='color: #1E3D59; margin-bottom: 10px;'>💡 Market Cap Insights</h4>
@@ -643,7 +620,6 @@ with tab4:
         stats_price = filtered_data['Price'].describe()
         st.markdown(create_stats_card("Stock Price Statistics (USD)", stats_price), unsafe_allow_html=True)
         
-        # Add a summary card
         st.markdown("""
             <div style='background: #F0F4F8; padding: 15px; border-radius: 10px; margin-top: 20px;'>
                 <h4 style='color: #1E3D59; margin-bottom: 10px;'>💡 Price Insights</h4>
@@ -654,7 +630,6 @@ with tab4:
             </div>
         """, unsafe_allow_html=True)
 
-    # Add overall market summary
     st.markdown("""
         <div style='background: #1E3D59; padding: 20px; border-radius: 10px; margin-top: 30px;'>
             <h3 style='color: white; margin-bottom: 15px;'>🎯 Market Overview</h3>
@@ -666,7 +641,6 @@ with tab4:
         </div>
     """, unsafe_allow_html=True)
 
-# Download section
 st.markdown("---")
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
@@ -678,7 +652,6 @@ with col2:
         mime="text/csv",
     )
 
-# Footer
 st.markdown(
     f'<div class="footer">'
     f'<span style="font-size: 14px">📊 <strong>Source:</strong> companiesmarketcap.com | '
